@@ -1,0 +1,1286 @@
+{
+  "info": {
+    "_postman_id": "06df42ab-77ad-4b9e-8bd8-59c2bc275a94",
+    "name": "Tasks Management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "36418423",
+    "_collection_link": "https://go.postman.co/collection/36418423-06df42ab-77ad-4b9e-8bd8-59c2bc275a94?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Sign Up",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\":\"test666@gmail.com\",\n    \"password\":\"Password123!\",\n    \"data\": {\n      \"name\": \"Mahmoud Taha\",\n      \"department\": \"Frontend\"\n    }\n  }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/v1/signup",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "v1",
+            "signup"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let response = pm.response.json();",
+              "",
+              "pm.environment.set(\"access_token\", response.access_token);",
+              "pm.environment.set(\"refresh_token\", response.refresh_token);",
+              "pm.environment.set(\"user_id\", response.user.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "",
+            "value": "",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"mahmoud.taha.dev@gmail.com\",\n    \"password\": \"@User1234\"\n}\n\n// {\n//     \"email\": \"sayed.mt.dev@gmail.com\",\n//     \"password\": \"hopa1234\"\n// }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/v1/token?grant_type=password",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "v1",
+            "token"
+          ],
+          "query": [
+            {
+              "key": "grant_type",
+              "value": "password"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Forgot Password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"mahmoud.taha.dev@gmail.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/v1/recover",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "v1",
+            "recover"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Password",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let response = pm.response.json();",
+              "",
+              "pm.environment.set(\"access_token\", response.access_token);",
+              "pm.environment.set(\"refresh_token\", response.refresh_token);",
+              "pm.environment.set(\"user_id\", response.user.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer eyJhbGciOiJIUzI1NiIsImtpZCI6Ilc0VzFCMXBRT3dEdEt3WTMiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3Zlc3lhbG1ld2x2bWNlZXZ5aWFzLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIzMWM3ODkxYS0xNWQ0LTQ2YWEtOTRmOC1kYjBmYjU2NDJlMTUiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzYwMjI0OTMwLCJpYXQiOjE3NjAyMjEzMzAsImVtYWlsIjoibWFobW91ZC50YWhhLmRldkBnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImRlcGFydG1lbnQiOiJGcm9udGVuZCIsImVtYWlsIjoibWFobW91ZC50YWhhLmRldkBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmFtZSI6Ik1haG1vdWQgVGFoYSIsInBob25lX3ZlcmlmaWVkIjpmYWxzZSwic3ViIjoiMzFjNzg5MWEtMTVkNC00NmFhLTk0ZjgtZGIwZmI1NjQyZTE1In0sInJvbGUiOiJhdXRoZW50aWNhdGVkIiwiYWFsIjoiYWFsMSIsImFtciI6W3sibWV0aG9kIjoib3RwIiwidGltZXN0YW1wIjoxNzYwMjIxMzMwfV0sInNlc3Npb25faWQiOiJmNWQwZTA5Yy1mM2ZjLTQ0MDYtYWU5MC02YWU2OTRkYTBkM2MiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.3rCbIBzfc_mONSwQLFNbjphdYW3F7iG-wi1BBTzfuTA",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"password\": \"test123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/v1/user",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "v1",
+            "user"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"password\": \"test123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/v1/logout",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "v1",
+            "logout"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get User Data",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/v1/user",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "v1",
+            "user"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Generate New Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let response = pm.response.json();",
+              "",
+              "pm.environment.set(\"access_token\", response.access_token);",
+              "pm.environment.set(\"refresh_token\", response.refresh_token);",
+              "pm.environment.set(\"user_id\", response.user.id);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/auth/v1/token?grant_type=refresh_token",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "v1",
+            "token"
+          ],
+          "query": [
+            {
+              "key": "grant_type",
+              "value": "refresh_token"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create New Project",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"Test new project 444\",\n    \"description\": \"All design & implementation tasks\"\n  }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/projects",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "projects"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Project",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"name\": \"Updated Project Name\",\n    \"description\": \"Updated project description here.\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/projects?id=eq.8c9aec99-2c69-4d39-b3e4-ae0e4f0fa18b",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "projects"
+          ],
+          "query": [
+            {
+              "key": "id",
+              "value": "eq.8c9aec99-2c69-4d39-b3e4-ae0e4f0fa18b"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Projects",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/rpc/get_projects",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "rpc",
+            "get_projects"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create New Epic",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Epic 8888\",\n    \"description\": \"All design & implementation tasks 6666\",\n    \"assignee_id\": \"{{user_id}}\",\n    \"project_id\": \"298be621-59c7-4a62-ad2c-e640ff72135f\",\n    \"deadline\": \"2025-12-20\"\n  }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/epics",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "epics"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Epic",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Epic 8888\",\n    \"description\": \"All design & implementation tasks 6666\",\n    \"assignee_id\": \"{{user_id}}\",\n    \"project_id\": \"298be621-59c7-4a62-ad2c-e640ff72135f\",\n    \"deadline\": \"2025-12-20\"\n  }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/epics?id=eq.d80d12db-f8b9-45c8-8e5a-a745a5f81031",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "epics"
+          ],
+          "query": [
+            {
+              "key": "id",
+              "value": "eq.d80d12db-f8b9-45c8-8e5a-a745a5f81031",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Project Epics",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Prefer",
+            "value": "count=exact",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/project_epics?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f&limit=2&offset=4",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "project_epics"
+          ],
+          "query": [
+            {
+              "key": "project_id",
+              "value": "eq.298be621-59c7-4a62-ad2c-e640ff72135f"
+            },
+            {
+              "key": "limit",
+              "value": "2",
+              "type": "text"
+            },
+            {
+              "key": "offset",
+              "value": "4",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Epic Details",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/project_epics?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f&id=eq.5360f7b4-5be0-4ca0-b0cc-31bff72434dd",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "project_epics"
+          ],
+          "query": [
+            {
+              "key": "project_id",
+              "value": "eq.298be621-59c7-4a62-ad2c-e640ff72135f"
+            },
+            {
+              "key": "id",
+              "value": "eq.5360f7b4-5be0-4ca0-b0cc-31bff72434dd"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Epic Details",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Updated epic title 2\"\n//   \"description\": \"Updated epic description\",\n//   \"assignee_id\": null,\n//   \"deadline\": \"2026-01-30\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/epics?id=eq.5360f7b4-5be0-4ca0-b0cc-31bff72434dd",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "epics"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": "",
+              "disabled": true
+            },
+            {
+              "key": "id",
+              "value": "eq.5360f7b4-5be0-4ca0-b0cc-31bff72434dd"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Project Members",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/get_project_members?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "get_project_members"
+          ],
+          "query": [
+            {
+              "key": "project_id",
+              "value": "eq.298be621-59c7-4a62-ad2c-e640ff72135f"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create New Task",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"project_id\": \"298be621-59c7-4a62-ad2c-e640ff72135f\",\n  \"epic_id\": \"5360f7b4-5be0-4ca0-b0cc-31bff72434dd\",\n  \"title\": \"Implement login validation\",\n  \"description\": \"Add client-side and server-side validation\",\n  \"assignee_id\": \"{{user_id}}\",\n  \"due_date\": \"2026-02-10T12:00:00Z\",\n  \"status\": \"TO_DO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/tasks",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "tasks"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Task",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"project_id\": \"298be621-59c7-4a62-ad2c-e640ff72135f\",\n  \"epic_id\": \"5360f7b4-5be0-4ca0-b0cc-31bff72434dd\",\n  \"title\": \"Implement login validation\",\n  \"description\": \"Add client-side and server-side validation\",\n  \"assignee_id\": \"{{user_id}}\",\n  \"due_date\": \"2026-02-10T12:00:00Z\",\n  \"status\": \"TO_DO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/tasks?id=eq.a61d0d50-4073-46a4-b484-9124538c104c",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "tasks"
+          ],
+          "query": [
+            {
+              "key": "id",
+              "value": "eq.a61d0d50-4073-46a4-b484-9124538c104c",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Task",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"TO_DO\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/tasks?id=eq.a61d0d50-4073-46a4-b484-9124538c104c",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "tasks"
+          ],
+          "query": [
+            {
+              "key": "id",
+              "value": "eq.a61d0d50-4073-46a4-b484-9124538c104c",
+              "type": "text"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Project Tasks",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Prefer",
+            "value": "count=exact",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/project_tasks?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "project_tasks"
+          ],
+          "query": [
+            {
+              "key": "project_id",
+              "value": "eq.298be621-59c7-4a62-ad2c-e640ff72135f"
+            },
+            {
+              "key": "status",
+              "value": "eq.TO_DO",
+              "disabled": true
+            },
+            {
+              "key": "title",
+              "value": "ilike.%25login%25",
+              "disabled": true
+            },
+            {
+              "key": "task_id",
+              "value": "ilike.%253%25",
+              "disabled": true
+            },
+            {
+              "key": "id",
+              "value": "eq.a61d0d50-4073-46a4-b484-9124538c104c",
+              "type": "text",
+              "disabled": true
+            },
+            {
+              "key": "limit",
+              "value": "1",
+              "type": "text",
+              "disabled": true
+            },
+            {
+              "key": "offset",
+              "value": "0",
+              "type": "text",
+              "disabled": true
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Epic Tasks",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/project_tasks?epic_id=eq.5360f7b4-5be0-4ca0-b0cc-31bff72434dd",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "project_tasks"
+          ],
+          "query": [
+            {
+              "key": "epic_id",
+              "value": "eq.5360f7b4-5be0-4ca0-b0cc-31bff72434dd"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Invite New Member To Project",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"p_email\": \"sayed.mt.dev@gmail.com\",\n  \"p_project_id\": \"ec9105d8-edea-4cc2-87dc-94e55d413d2d\",\n  \"p_app_url\": \"http://localhost:3000\",\n  \"p_base_url\": \"https://vesyalmewlvmceevyias.supabase.co\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/rpc/invite_member",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "rpc",
+            "invite_member"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Accept Invitation",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"p_token\": \"7f830826f5a286890c440c87110d06e876772f804afcdc9d9812cbfc5591c456\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/rpc/accept_invitation",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "rpc",
+            "accept_invitation"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": ""
+    },
+    {
+      "key": "api_key",
+      "value": ""
+    }
+  ]
+}
