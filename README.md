@@ -8,11 +8,11 @@ This project will help you improve your skills by simulating a real-world projec
 
 ## 🚀 Project Resources
 
-- **Figma Design:** [View Design](https://shorturl.do/u-USXLHv6p)
-- **Task Board:** [List of tasks to do](https://shorturl.do/lhuC92TaRP)
-- **Backend Schema & Functions:** This repository contains the schema and functions for the backend that anyone can use. For instructions on how to use them, refer to the [Backend Documentation](https://shorturl.do/PRbxfI2mCm).
-- **API Documentation:** [View API Docs](https://shorturl.do/31GZQr4U2V)
-- **APIDog Documentation:** [View APIDog Docs](https://shorturl.do/krjR9lGuEN)
+- **Figma Design:** [View Design](https://www.figma.com/design/zAwYa5nDWE2YirHYPpNabw/Tasks-Management?node-id=0-1&t=L7Jf026Stu5qCTd2-1)
+- **Task Board:** [List of tasks to do](https://www.notion.so/ee8ac15769ca83b790a281e6aca5682a?v=fb4ac15769ca8211827708b963b3b7fc)
+- **Backend Schema & Functions:** This repository contains the schema and functions for the backend that anyone can use. For instructions on how to use them, refer to the [Backend Documentation](https://github.com/mahmoud-taha-dev/tasks-management-training).
+- **API Documentation:** [View API Docs](https://github.com/mahmoud-taha-dev/tasks-management-training/blob/main/tasks_api_docs.md)
+- **APIDog Documentation:** [View APIDog Docs](https://mr89tdrc7j.apidog.io/)
 
 ## 🛠️ Tools Included
 
