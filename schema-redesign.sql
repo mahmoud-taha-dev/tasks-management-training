@@ -202,22 +202,29 @@ for each row execute function private.expire_old_project_invitation();
 create or replace function public.create_project_invitation(
   p_project_id uuid,
   p_email text,
-  p_role text default 'member'
+  p_role text default 'member',
+  p_invited_by uuid default null
 ) returns jsonb
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
-  v_user_id uuid := (select auth.uid());
+  v_user_id uuid := p_invited_by;
   v_email text := lower(btrim(p_email));
   v_role text := coalesce(p_role, 'member');
   v_token text;
   v_expires_at timestamptz := now() + interval '7 days';
   v_invitation_id uuid;
+  v_is_owner_or_admin boolean;
+  v_is_owner boolean;
 begin
+  -- Only the trusted Edge Function may call this RPC with its service-role client.
+  if (select auth.jwt() ->> 'role') is distinct from 'service_role' then
+    raise exception 'This function can only be called by the invitation service' using errcode = '42501';
+  end if;
   if v_user_id is null then
-    raise exception 'Authentication required' using errcode = '28000';
+    raise exception 'Inviter user ID is required' using errcode = '22004';
   end if;
   if p_project_id is null then
     raise exception 'Project ID is required' using errcode = '22004';
@@ -229,10 +236,18 @@ begin
   if v_role not in ('admin', 'member', 'viewer') then
     raise exception 'Invalid invitation role' using errcode = '22023';
   end if;
-  if not private.has_project_role(p_project_id, array['owner','admin']) then
+
+  select
+    coalesce(bool_or(pm.role in ('owner', 'admin')), false),
+    coalesce(bool_or(pm.role = 'owner'), false)
+  into v_is_owner_or_admin, v_is_owner
+  from public.project_members pm
+  where pm.project_id = p_project_id and pm.user_id = v_user_id;
+
+  if not v_is_owner_or_admin then
     raise exception 'Only project owners and admins can invite members' using errcode = '42501';
   end if;
-  if v_role = 'admin' and not private.has_project_role(p_project_id, array['owner']) then
+  if v_role = 'admin' and not v_is_owner then
     raise exception 'Only project owners can invite admins' using errcode = '42501';
   end if;
   if exists (
@@ -275,52 +290,6 @@ exception
     raise exception 'A pending invitation already exists for this email' using errcode = '23505';
 end;
 $$;
-
-revoke all on function public.create_project_invitation(uuid, text, text) from public, anon;
-grant execute on function public.create_project_invitation(uuid, text, text) to authenticated;
-
--- Revoke an invitation when email delivery fails. The original inviter or a project
--- owner/admin can revoke a pending invitation; clients cannot update invitation rows.
-create or replace function public.revoke_project_invitation(p_invitation_id uuid)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $
-declare
-  v_user_id uuid := (select auth.uid());
-  v_invitation public.project_invitations%rowtype;
-begin
-  if v_user_id is null then
-    raise exception 'Authentication required' using errcode = '28000';
-  end if;
-
-  select invitation.*
-    into v_invitation
-    from public.project_invitations invitation
-   where invitation.id = p_invitation_id
-   for update;
-
-  if not found or v_invitation.status <> 'pending' then
-    raise exception 'Pending invitation not found' using errcode = 'P0002';
-  end if;
-
-  if v_invitation.invited_by <> v_user_id
-     and not private.has_project_role(v_invitation.project_id, array['owner','admin']) then
-    raise exception 'Not allowed to revoke this invitation' using errcode = '42501';
-  end if;
-
-  update public.project_invitations
-     set status = 'revoked'
-   where id = v_invitation.id;
-
-  return jsonb_build_object('invitation_id', v_invitation.id, 'status', 'revoked');
-end;
-$;
-
-revoke all on function public.revoke_project_invitation(uuid) from public, anon;
-grant execute on function public.revoke_project_invitation(uuid) to authenticated;
-
 
 
 create or replace function private.next_project_number(
