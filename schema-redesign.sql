@@ -173,54 +173,13 @@ revoke all on function private.has_project_role(uuid, text[]) from public, anon;
 grant execute on function private.has_project_role(uuid, text[]) to authenticated;
 
 
--- Invitation creation guard. Runs with the table owner's privileges only to inspect
--- Auth users and pending invitations without exposing those records to callers.
-create or replace function private.can_create_project_invitation(
-  p_project_id uuid,
-  p_email text
-) returns boolean
-language sql
-stable
-security definer
-set search_path = ''
-as $
-  select
-    (select auth.uid()) is not null
-    and exists (
-      select 1
-      from public.project_members inviter
-      where inviter.project_id = p_project_id
-        and inviter.user_id = (select auth.uid())
-        and inviter.role in ('owner', 'admin')
-    )
-    and not exists (
-      select 1
-      from public.project_members pm
-      join auth.users existing_user on existing_user.id = pm.user_id
-      where pm.project_id = p_project_id
-        and lower(existing_user.email) = lower(btrim(p_email))
-    )
-    and not exists (
-      select 1
-      from public.project_invitations invitation
-      where invitation.project_id = p_project_id
-        and lower(invitation.email) = lower(btrim(p_email))
-        and invitation.status = 'pending'
-        and invitation.expires_at > now()
-    );
-$;
-
-revoke all on function private.can_create_project_invitation(uuid, text) from public, anon;
-grant execute on function private.can_create_project_invitation(uuid, text) to authenticated;
-
-
 -- Free the one-pending-invitation slot when its previous invitation has expired.
 create or replace function private.expire_old_project_invitation()
 returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 begin
   update public.project_invitations
     set status = 'expired'
@@ -230,12 +189,96 @@ begin
       and expires_at <= now();
   return new;
 end;
-$;
+$$;
 
 revoke all on function private.expire_old_project_invitation() from public, anon, authenticated;
 create trigger project_invitations_expire_old_before_insert
 before insert on public.project_invitations
 for each row execute function private.expire_old_project_invitation();
+
+-- Create invitations for any email address; the invitee need not already have an Auth account.
+-- Only the SHA-256 hash is stored. The raw token is returned once to the authorized inviter
+-- for delivery through the application's trusted email service.
+create or replace function public.create_project_invitation(
+  p_project_id uuid,
+  p_email text,
+  p_role text default 'member'
+) returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := (select auth.uid());
+  v_email text := lower(btrim(p_email));
+  v_role text := coalesce(p_role, 'member');
+  v_token text;
+  v_expires_at timestamptz := now() + interval '7 days';
+  v_invitation_id uuid;
+begin
+  if v_user_id is null then
+    raise exception 'Authentication required' using errcode = '28000';
+  end if;
+  if p_project_id is null then
+    raise exception 'Project ID is required' using errcode = '22004';
+  end if;
+  if v_email is null or length(v_email) > 320
+     or position('@' in v_email) <= 1 or v_email ~ '[[:space:]]' then
+    raise exception 'A valid email address is required' using errcode = '22023';
+  end if;
+  if v_role not in ('admin', 'member', 'viewer') then
+    raise exception 'Invalid invitation role' using errcode = '22023';
+  end if;
+  if not private.has_project_role(p_project_id, array['owner','admin']) then
+    raise exception 'Only project owners and admins can invite members' using errcode = '42501';
+  end if;
+  if v_role = 'admin' and not private.has_project_role(p_project_id, array['owner']) then
+    raise exception 'Only project owners can invite admins' using errcode = '42501';
+  end if;
+  if exists (
+    select 1 from public.project_members pm
+    join auth.users u on u.id = pm.user_id
+    where pm.project_id = p_project_id and lower(u.email) = v_email
+  ) then
+    raise exception 'This email already belongs to a project member' using errcode = '23505';
+  end if;
+
+  update public.project_invitations
+     set status = 'expired'
+   where project_id = p_project_id and lower(email) = v_email
+     and status = 'pending' and expires_at <= now();
+
+  if exists (
+    select 1 from public.project_invitations i
+    where i.project_id = p_project_id and lower(i.email) = v_email
+      and i.status = 'pending' and i.expires_at > now()
+  ) then
+    raise exception 'A pending invitation already exists for this email' using errcode = '23505';
+  end if;
+
+  v_token := encode(extensions.gen_random_bytes(32), 'hex');
+  insert into public.project_invitations (
+    project_id, email, token_hash, invited_by, role, expires_at
+  ) values (
+    p_project_id, v_email,
+    encode(extensions.digest(convert_to(v_token, 'UTF8'), 'sha256'), 'hex'),
+    v_user_id, v_role, v_expires_at
+  ) returning id into v_invitation_id;
+
+  return jsonb_build_object(
+    'invitation_id', v_invitation_id, 'project_id', p_project_id,
+    'email', v_email, 'role', v_role, 'status', 'pending',
+    'expires_at', v_expires_at, 'invitation_token', v_token
+  );
+exception
+  when unique_violation then
+    raise exception 'A pending invitation already exists for this email' using errcode = '23505';
+end;
+$$;
+
+revoke all on function public.create_project_invitation(uuid, text, text) from public, anon;
+grant execute on function public.create_project_invitation(uuid, text, text) to authenticated;
+
 
 create or replace function private.next_project_number(
   p_project_id uuid,
@@ -396,15 +439,6 @@ using (private.has_project_role(project_id, array['owner','admin']));
 -- Invitations are visible/manageable only by project owners/admins.
 create policy project_invitations_select on public.project_invitations for select to authenticated
 using (private.has_project_role(project_id, array['owner','admin']));
-create policy project_invitations_insert on public.project_invitations for insert to authenticated
-with check (
-  invited_by = (select auth.uid())
-  and role in ('admin','member','viewer')
-  and status = 'pending'
-  and expires_at > now()
-  and (role <> 'admin' or private.has_project_role(project_id, array['owner']))
-  and private.can_create_project_invitation(project_id, email)
-);
 -- Invitation state transitions are performed only by trusted database functions.
 -- There is intentionally no direct UPDATE policy for authenticated clients.
 create policy project_invitations_delete on public.project_invitations for delete to authenticated
@@ -662,7 +696,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare
   v_user_id uuid := (select auth.uid());
   v_user_email text;
@@ -720,7 +754,7 @@ begin
     'status', 'accepted'
   );
 end;
-$;
+$$;
 
 revoke all on function public.accept_project_invitation(text) from public, anon;
 grant execute on function public.accept_project_invitation(text) to authenticated;
@@ -738,7 +772,7 @@ grant select, insert, update, delete on
   public.projects, public.project_members,
   public.epics, public.tasks, public.comments, public.attachments
 to authenticated;
-grant select, insert, delete on public.project_invitations to authenticated;
+grant select, delete on public.project_invitations to authenticated;
 grant select on public.departments to authenticated;
 
 commit;
