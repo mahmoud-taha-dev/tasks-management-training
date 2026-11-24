@@ -1159,7 +1159,7 @@
       "response": []
     },
     {
-      "name": "Create Project Invitation",
+      "name": "Send Project Invitation",
       "request": {
         "auth": {
           "type": "noauth"
@@ -1175,13 +1175,17 @@
             "value": "Bearer {{access_token}}"
           },
           {
+            "key": "Origin",
+            "value": "{{frontend_origin}}"
+          },
+          {
             "key": "Content-Type",
             "value": "application/json"
           }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"p_project_id\": \"{{project_id}}\",\n  \"p_email\": \"new.person@example.com\",\n  \"p_role\": \"member\"\n}",
+          "raw": "{\n  \"project_id\": \"{{project_id}}\",\n  \"email\": \"new.person@example.com\",\n  \"role\": \"member\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -1189,15 +1193,14 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/rest/v1/rpc/create_project_invitation",
+          "raw": "{{base_url}}/functions/v1/send-invite-email",
           "host": [
             "{{base_url}}"
           ],
           "path": [
-            "rest",
+            "functions",
             "v1",
-            "rpc",
-            "create_project_invitation"
+            "send-invite-email"
           ]
         }
       },
@@ -1379,6 +1382,10 @@
     {
       "key": "invitation_token",
       "value": ""
+    },
+    {
+      "key": "frontend_origin",
+      "value": "http://localhost:3000"
     }
   ]
 }
