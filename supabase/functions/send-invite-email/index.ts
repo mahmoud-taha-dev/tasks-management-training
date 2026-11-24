@@ -92,6 +92,7 @@ Deno.serve(async (req: Request) => {
     const smtpHost = requiredEnv("SMTP_HOST");
     const smtpPort = Number(requiredEnv("SMTP_PORT"));
     const smtpUser = requiredEnv("SMTP_USER");
+    const smtpFrom = Deno.env.get("SMTP_FROM")?.trim() || smtpUser;
     const smtpPassword = requiredEnv("SMTP_PASSWORD");
     const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -166,7 +167,7 @@ Deno.serve(async (req: Request) => {
     });
 
     await smtpClient.send({
-      from: smtpUser,
+      from: smtpFrom,
       to: invitation.email,
       subject: "You're invited to a project",
       html: `
