@@ -172,6 +172,71 @@ $$;
 revoke all on function private.has_project_role(uuid, text[]) from public, anon;
 grant execute on function private.has_project_role(uuid, text[]) to authenticated;
 
+
+-- Invitation creation guard. Runs with the table owner's privileges only to inspect
+-- Auth users and pending invitations without exposing those records to callers.
+create or replace function private.can_create_project_invitation(
+  p_project_id uuid,
+  p_email text
+) returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select
+    (select auth.uid()) is not null
+    and exists (
+      select 1
+      from public.project_members inviter
+      where inviter.project_id = p_project_id
+        and inviter.user_id = (select auth.uid())
+        and inviter.role in ('owner', 'admin')
+    )
+    and not exists (
+      select 1
+      from public.project_members pm
+      join auth.users existing_user on existing_user.id = pm.user_id
+      where pm.project_id = p_project_id
+        and lower(existing_user.email) = lower(btrim(p_email))
+    )
+    and not exists (
+      select 1
+      from public.project_invitations invitation
+      where invitation.project_id = p_project_id
+        and lower(invitation.email) = lower(btrim(p_email))
+        and invitation.status = 'pending'
+        and invitation.expires_at > now()
+    );
+$;
+
+revoke all on function private.can_create_project_invitation(uuid, text) from public, anon;
+grant execute on function private.can_create_project_invitation(uuid, text) to authenticated;
+
+
+-- Free the one-pending-invitation slot when its previous invitation has expired.
+create or replace function private.expire_old_project_invitation()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $
+begin
+  update public.project_invitations
+    set status = 'expired'
+    where project_id = new.project_id
+      and lower(email) = lower(btrim(new.email))
+      and status = 'pending'
+      and expires_at <= now();
+  return new;
+end;
+$;
+
+revoke all on function private.expire_old_project_invitation() from public, anon, authenticated;
+create trigger project_invitations_expire_old_before_insert
+before insert on public.project_invitations
+for each row execute function private.expire_old_project_invitation();
+
 create or replace function private.next_project_number(
   p_project_id uuid,
   p_counter_table text
@@ -334,11 +399,14 @@ using (private.has_project_role(project_id, array['owner','admin']));
 create policy project_invitations_insert on public.project_invitations for insert to authenticated
 with check (
   invited_by = (select auth.uid())
-  and private.has_project_role(project_id, array['owner','admin'])
+  and role in ('admin','member','viewer')
+  and status = 'pending'
+  and expires_at > now()
+  and (role <> 'admin' or private.has_project_role(project_id, array['owner']))
+  and private.can_create_project_invitation(project_id, email)
 );
-create policy project_invitations_update on public.project_invitations for update to authenticated
-using (private.has_project_role(project_id, array['owner','admin']))
-with check (private.has_project_role(project_id, array['owner','admin']));
+-- Invitation state transitions are performed only by trusted database functions.
+-- There is intentionally no direct UPDATE policy for authenticated clients.
 create policy project_invitations_delete on public.project_invitations for delete to authenticated
 using (private.has_project_role(project_id, array['owner','admin']));
 
@@ -585,6 +653,77 @@ begin
 end;
 $$;
 
+
+
+-- Accept an invitation only when the authenticated account email matches the
+-- invitation email. The raw token is never stored; only its SHA-256 hash is stored.
+create or replace function public.accept_project_invitation(p_token text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $
+declare
+  v_user_id uuid := (select auth.uid());
+  v_user_email text;
+  v_invitation public.project_invitations%rowtype;
+begin
+  if v_user_id is null then
+    raise exception 'Authentication required' using errcode = '28000';
+  end if;
+
+  if p_token is null or length(p_token) < 32 or length(p_token) > 512 then
+    raise exception 'Invalid or expired invitation' using errcode = '22023';
+  end if;
+
+  select lower(u.email)
+    into v_user_email
+    from auth.users u
+    where u.id = v_user_id;
+
+  if v_user_email is null then
+    raise exception 'The authenticated account has no email address' using errcode = '28000';
+  end if;
+
+  select invitation.*
+    into v_invitation
+    from public.project_invitations invitation
+    where invitation.token_hash = encode(extensions.digest(convert_to(p_token, 'UTF8'), 'sha256'), 'hex')
+    for update;
+
+  if not found
+     or v_invitation.status <> 'pending'
+     or v_invitation.expires_at <= now()
+     or lower(v_invitation.email) <> v_user_email then
+    raise exception 'Invalid or expired invitation' using errcode = '22023';
+  end if;
+
+  if exists (
+    select 1 from public.project_members pm
+    where pm.project_id = v_invitation.project_id
+      and pm.user_id = v_user_id
+  ) then
+    raise exception 'You are already a member of this project' using errcode = '23505';
+  end if;
+
+  insert into public.project_members(project_id, user_id, role)
+  values (v_invitation.project_id, v_user_id, v_invitation.role);
+
+  update public.project_invitations
+    set status = 'accepted', accepted_at = now()
+    where id = v_invitation.id;
+
+  return jsonb_build_object(
+    'project_id', v_invitation.project_id,
+    'role', v_invitation.role,
+    'status', 'accepted'
+  );
+end;
+$;
+
+revoke all on function public.accept_project_invitation(text) from public, anon;
+grant execute on function public.accept_project_invitation(text) to authenticated;
+
 revoke all on function public.get_tasks_calendar_stats(date, date, uuid, public.task_status) from public, anon;
 revoke all on function public.get_tasks_count_per_project(date, date, public.task_status) from public, anon;
 grant execute on function public.get_tasks_calendar_stats(date, date, uuid, public.task_status) to authenticated;
@@ -595,9 +734,10 @@ grant execute on function public.get_tasks_count_per_project(date, date, public.
 revoke all on all tables in schema public from anon;
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on
-  public.projects, public.project_members, public.project_invitations,
+  public.projects, public.project_members,
   public.epics, public.tasks, public.comments, public.attachments
 to authenticated;
+grant select, insert, delete on public.project_invitations to authenticated;
 grant select on public.departments to authenticated;
 
 commit;
