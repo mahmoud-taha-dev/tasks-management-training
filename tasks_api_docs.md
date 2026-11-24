@@ -54,17 +54,17 @@ The function validates the signed-in user's access token itself. Keep the functi
 
 ### 4. Add email provider secrets
 
-In **Edge Functions → Secrets**, add the following keys using the credentials from your SMTP email provider:
+The function uses Gmail's fixed SMTP endpoint (`smtp.gmail.com:465`, implicit TLS), so students do not need to configure the host or port.
+
+In **Edge Functions → Secrets**, add only the Gmail account credentials:
 
 | Name | Value |
 |---|---|
-| `SMTP_HOST` | SMTP server hostname |
-| `SMTP_PORT` | SMTP port (use a supported port such as `465`; Supabase blocks outbound ports `25` and `587`) |
-| `SMTP_USER` | SMTP username |
-| `SMTP_PASSWORD` | SMTP password |
+| `SMTP_USER` | Gmail address used to send invitations |
+| `SMTP_PASSWORD` | Gmail App Password (not the normal Google account password) |
 | `SMTP_FROM` | Optional sender address; defaults to `SMTP_USER` |
 
-Save the secrets. Supabase provides the project URL and API keys to the Edge Function runtime; students should not add Supabase's service-role/secret key to frontend code or commit any credentials. If a secret is changed, the function can read the updated value without a code redeployment.
+Create an App Password in the Google Account security settings after enabling 2-Step Verification. Never put the App Password in source code, frontend environment variables, or GitHub. Save the secrets. Supabase provides the project URL and API keys to the Edge Function runtime; students should not add Supabase's service-role/secret key to frontend code or commit any credentials. If a secret is changed, the function can read the updated value without a code redeployment.
 
 ### 5. Copy the project API details
 
