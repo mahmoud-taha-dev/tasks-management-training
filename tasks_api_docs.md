@@ -15,7 +15,73 @@
 | `{{access_token}}` | JWT access token — set automatically after Login |
 | `{{refresh_token}}` | Refresh token — set automatically after Login |
 | `{{user_id}}` | Authenticated user UUID — set automatically after Login |
-| `{{frontend_origin}}` | Frontend origin used to build invitation links (e.g. `http://localhost:3000`) |
+| `{{frontend_origin}}` | Frontend origin used to build invitation links (e.g. `http://localhost:3000`); set manually in Postman |
+
+---
+
+## Student Setup (Supabase Dashboard Only)
+
+Every Rafiq student creates and configures their **own Supabase project**. These steps use the Supabase Dashboard GUI; the Supabase CLI, terminal, Docker, and Supabase-specific local environment files are not required.
+
+### 1. Create a Supabase project
+
+1. Open the [Supabase Dashboard](https://supabase.com/dashboard).
+2. Create a new project and wait for provisioning to finish.
+3. Open the project.
+
+### 2. Apply the database schema
+
+1. In this repository, open `schema-redesign.sql` and copy its complete contents.
+2. In the Supabase Dashboard, open **SQL Editor**.
+3. Create a new query, paste the SQL, and run it.
+4. Confirm that the query completes successfully before moving on.
+
+Run the schema against a new, dedicated training project. It is a full schema setup script, not a small incremental migration. Do not run it against a project containing data you need to keep.
+
+### 3. Create and deploy the invitation Edge Function
+
+The invitation email workflow uses an Edge Function. Create it directly in the Dashboard:
+
+1. Open **Edge Functions** in the project's left navigation.
+2. Select **Deploy a new function**, then choose **Via Editor**.
+3. Name the function exactly `send-invite-email`.
+4. Open `supabase/functions/send-invite-email/index.ts` in this repository and copy the complete source.
+5. Replace the editor's starter code with the copied source.
+6. Select **Deploy function**.
+7. Open the deployed function and use its **Test** panel to inspect the endpoint and test configuration.
+
+The function validates the signed-in user's access token itself. Keep the function's JWT verification enabled when the Dashboard offers that setting.
+
+### 4. Add email provider secrets
+
+In **Edge Functions → Secrets**, add the following keys using the credentials from your SMTP email provider:
+
+| Name | Value |
+|---|---|
+| `SMTP_HOST` | SMTP server hostname |
+| `SMTP_PORT` | SMTP port (commonly `465` for implicit TLS) |
+| `SMTP_USER` | SMTP username |
+| `SMTP_PASSWORD` | SMTP password |
+| `SMTP_FROM` | Optional sender address; defaults to `SMTP_USER` |
+
+Save the secrets. Supabase provides the project URL and API keys to the Edge Function runtime; students should not add Supabase's service-role/secret key to frontend code or commit any credentials. If a secret is changed, the function can read the updated value without a code redeployment.
+
+### 5. Copy the project API details
+
+1. In the Dashboard, open **Project Settings → API Keys** (or the project's **Connect** dialog).
+2. Copy the **Project URL** and **Publishable key**.
+3. Use them in the frontend app's own environment configuration and in the Postman collection's `base_url` and `api_key` variables. The publishable key is intended for client-side use; never use a secret/service-role key in the browser.
+
+The frontend may have its own `.env.local` file for local app configuration. That file belongs to the frontend application, not to Supabase setup, and must not contain SMTP credentials or a Supabase secret/service-role key.
+
+### 6. Configure and use Postman
+
+1. Import `Tasks Management.postman_collection.json` into Postman.
+2. Create/select a Postman environment and set `base_url` to the Supabase Project URL, `api_key` to the Publishable key, and `frontend_origin` to the frontend origin (for example, `http://localhost:3000`).
+3. Sign up and log in using the collection. The login scripts save the access token, refresh token, and user ID to the selected Postman environment.
+4. Set `project_id` to a project created by the signed-in user before testing project-specific requests.
+
+No Supabase CLI, terminal commands, Docker setup, or Supabase local stack is part of the student setup.
 
 ---
 
@@ -579,27 +645,21 @@ Creates an invitation and sends the invitation email through the Supabase Edge F
 
 The Edge Function authenticates the caller using their JWT, then calls the token-returning `create_project_invitation` RPC using its server-only service-role key, constructs `{Origin}/accept-invitation?token=...`, and sends the email. The raw token is never returned to the frontend. The function allows any valid HTTP or HTTPS origin during development and requires an `Origin` header. CORS is configured with `Access-Control-Allow-Origin: *` for development.
 
-Required Edge Function environment values: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD`; `SMTP_FROM` is optional and defaults to `SMTP_USER`. Supabase provides `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to the function environment. The service-role key is used only inside the Edge Function to call the token-returning RPC; it must never be exposed to the frontend. For local development, provide the SMTP values through a local environment file outside version control and pass its path to `supabase functions serve --env-file <path-to-local-secrets-file>`. The function's `Origin` header is used as the frontend origin; any HTTP/HTTPS origin is accepted during development. If email delivery fails after invitation creation, the function calls the internal `revoke_project_invitation` RPC to revoke the undelivered invitation.
+Required Edge Function secrets: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD`; `SMTP_FROM` is optional and defaults to `SMTP_USER`. Supabase injects the project URL and API keys into the Edge Function runtime. The function uses its server-side service-role key only to call the token-returning `create_project_invitation` RPC. Never expose a service-role/secret key to the frontend.
 
-Only project owners and admins can create invitations. Only owners can invite someone as an admin. Existing project members and emails with an active pending invitation are rejected. Expired pending invitations are marked expired before a replacement is created.
+The function requires an `Origin` header to construct the invitation URL. During this training project's development phase, it accepts any valid HTTP or HTTPS origin and uses that origin to create `/accept-invitation?token=...`. Browsers send `Origin` automatically; Postman must send it manually. CORS currently allows all origins for development. Before using this workflow in a production deployment, restrict accepted origins to the deployed frontend domains.
 
-#### Local development and deployment
+If email delivery fails after an invitation is created, the function attempts to revoke the undelivered invitation. Only project owners and admins can create invitations; only owners can invite someone as an admin. Existing project members and emails with an active pending invitation are rejected. Expired pending invitations are marked expired before a replacement is created.
 
-Create a local secrets file on your machine (do not commit it) containing `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and optional `SMTP_FROM`. Start the local Supabase stack and serve the function:
+#### Dashboard deployment and testing (GUI only)
 
-```bash
-supabase start
-supabase functions serve send-invite-email --env-file <path-to-local-secrets-file>
-```
+If you have not deployed the function yet, follow **Student Setup → Create and deploy the invitation Edge Function** above. In short: open **Edge Functions → Deploy a new function → Via Editor**, create `send-invite-email`, paste the complete contents of `supabase/functions/send-invite-email/index.ts` from this repository, and select **Deploy function**.
 
-On the hosted Supabase project, configure SMTP values in **Dashboard → Edge Functions → Secrets** (or use the CLI), then deploy the function:
+Add the SMTP values under **Edge Functions → Secrets** as described in **Student Setup → Add email provider secrets**. No local Supabase stack, CLI, terminal command, or Supabase `.env` file is needed. The Dashboard's function editor can also be used to edit and redeploy the function later.
 
-```bash
-supabase secrets set SMTP_HOST=... SMTP_PORT=465 SMTP_USER=... SMTP_PASSWORD=... SMTP_FROM=...
-supabase functions deploy send-invite-email
-```
+Use the **Test** panel on the deployed function or the **Send Project Invitation** request in the Postman collection to test it. For Postman, set `Origin: {{frontend_origin}}` (for example, `http://localhost:3000`) and use a valid signed-in user's access token.
 
-The function is configured with JWT verification enabled. Supabase injects its project URL and API keys into the Edge Function runtime; you do not need to create a `.env` file in the Supabase dashboard or commit one to the repository. Use an SMTP provider/port supported by your deployment environment; SMTP credentials must never be committed to Git.
+
 
 ---
 
