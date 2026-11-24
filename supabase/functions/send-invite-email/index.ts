@@ -93,6 +93,7 @@ Deno.serve(async (req: Request) => {
     const smtpPort = Number(requiredEnv("SMTP_PORT"));
     const smtpUser = requiredEnv("SMTP_USER");
     const smtpPassword = requiredEnv("SMTP_PASSWORD");
+    const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!Number.isInteger(smtpPort) || smtpPort <= 0 || smtpPort > 65535) {
       throw new Error("SMTP_PORT must be a valid TCP port");
@@ -126,12 +127,17 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "role must be admin, member, or viewer" }, 400);
     }
 
-    const { data: invitationData, error: invitationError } = await supabase.rpc(
+    const invitationService = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const { data: invitationData, error: invitationError } = await invitationService.rpc(
       "create_project_invitation",
       {
         p_project_id: projectId,
         p_email: email,
         p_role: role,
+        p_invited_by: authData.user.id,
       },
     );
 
@@ -171,7 +177,11 @@ Deno.serve(async (req: Request) => {
       `,
     });
 
-    await smtpClient.close();
+    try {
+      await smtpClient.close();
+    } catch (closeError) {
+      console.error("Email was sent, but SMTP connection close failed:", closeError);
+    }
     smtpClient = undefined;
 
     return jsonResponse({
