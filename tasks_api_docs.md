@@ -274,6 +274,7 @@ Creates a new project for the authenticated user.
 |---|---|---|
 | `apikey` | `{{api_key}}` | Supabase public API key |
 | `Authorization` | `Bearer {{access_token}}` | JWT access token |
+| `Origin` | `{{frontend_origin}}` | Frontend origin used to build the invitation URL; browsers send this automatically |
 | `Content-Type` | `application/json` | Request body format |
 
 #### Request Body
@@ -581,6 +582,24 @@ The Edge Function authenticates the caller using their JWT, then calls the token
 Required Edge Function environment values: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD`. Supabase provides `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to the function environment. The service-role key is used only inside the Edge Function to call the token-returning RPC; it must never be exposed to the frontend. For local development, put the SMTP values in `supabase/.env.local` and run `supabase functions serve --env-file supabase/.env.local`. The function's `Origin` header is used as the frontend origin; any HTTP/HTTPS origin is accepted during development. If email delivery fails after invitation creation, the function calls the internal `revoke_project_invitation` RPC to revoke the undelivered invitation.
 
 Only project owners and admins can create invitations. Only owners can invite someone as an admin. Existing project members and emails with an active pending invitation are rejected. Expired pending invitations are marked expired before a replacement is created.
+
+#### Local development and deployment
+
+Copy `supabase/.env.local.example` to `supabase/.env.local`, then set your SMTP credentials. Start the local Supabase stack and serve the function:
+
+```bash
+supabase start
+supabase functions serve send-invite-email --env-file supabase/.env.local
+```
+
+Deploy the function and configure SMTP secrets in the linked Supabase project:
+
+```bash
+supabase secrets set SMTP_HOST=... SMTP_PORT=465 SMTP_USER=... SMTP_PASSWORD=...
+supabase functions deploy send-invite-email
+```
+
+The function is configured with JWT verification enabled. Use an SMTP provider/port supported by your deployment environment; SMTP credentials must never be committed to Git.
 
 ---
 
