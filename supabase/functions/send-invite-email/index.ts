@@ -89,8 +89,9 @@ Deno.serve(async (req: Request) => {
       throw new Error("Missing SUPABASE_ANON_KEY or SUPABASE_PUBLISHABLE_KEY");
     }
 
-    const smtpHost = requiredEnv("SMTP_HOST");
-    const smtpPort = Number(requiredEnv("SMTP_PORT"));
+    // Gmail SMTP configuration is fixed; only account credentials are project secrets.
+    const smtpHost = "smtp.gmail.com";
+    const smtpPort = 465;
     const smtpUser = requiredEnv("SMTP_USER");
     const smtpFrom = Deno.env.get("SMTP_FROM")?.trim() || smtpUser;
     const smtpPassword = requiredEnv("SMTP_PASSWORD");
