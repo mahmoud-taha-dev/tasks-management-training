@@ -15,6 +15,7 @@
 | `{{access_token}}` | JWT access token — set automatically after Login |
 | `{{refresh_token}}` | Refresh token — set automatically after Login |
 | `{{user_id}}` | Authenticated user UUID — set automatically after Login |
+| `{{frontend_origin}}` | Frontend origin used to build invitation links (e.g. `http://localhost:3000`) |
 
 ---
 
@@ -575,9 +576,9 @@ Creates an invitation and sends the invitation email through the Supabase Edge F
 }
 ```
 
-The Edge Function calls the internal `create_project_invitation` RPC using the caller's JWT, constructs `{Origin}/accept-invitation?token=...`, and sends the email. The raw token is never returned to the frontend. The function allows any valid HTTP or HTTPS origin during development and requires an `Origin` header. CORS is configured with `Access-Control-Allow-Origin: *` for development.
+The Edge Function authenticates the caller using their JWT, then calls the token-returning `create_project_invitation` RPC using its server-only service-role key, constructs `{Origin}/accept-invitation?token=...`, and sends the email. The raw token is never returned to the frontend. The function allows any valid HTTP or HTTPS origin during development and requires an `Origin` header. CORS is configured with `Access-Control-Allow-Origin: *` for development.
 
-Required Edge Function secrets: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD`. Supabase provides `SUPABASE_URL` and the project's anon/publishable key to the function environment. If email delivery fails after invitation creation, the function calls the internal `revoke_project_invitation` RPC to revoke the undelivered invitation.
+Required Edge Function environment values: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD`. Supabase provides `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to the function environment. The service-role key is used only inside the Edge Function to call the token-returning RPC; it must never be exposed to the frontend. For local development, put the SMTP values in `supabase/.env.local` and run `supabase functions serve --env-file supabase/.env.local`. The function's `Origin` header is used as the frontend origin; any HTTP/HTTPS origin is accepted during development. If email delivery fails after invitation creation, the function calls the internal `revoke_project_invitation` RPC to revoke the undelivered invitation.
 
 Only project owners and admins can create invitations. Only owners can invite someone as an admin. Existing project members and emails with an active pending invitation are rejected. Expired pending invitations are marked expired before a replacement is created.
 
