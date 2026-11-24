@@ -1159,7 +1159,7 @@
       "response": []
     },
     {
-      "name": "Invite New Member To Project",
+      "name": "Create Project Invitation",
       "request": {
         "auth": {
           "type": "noauth"
@@ -1181,7 +1181,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"p_email\": \"sayed.mt.dev@gmail.com\",\n  \"p_project_id\": \"ec9105d8-edea-4cc2-87dc-94e55d413d2d\",\n  \"p_app_url\": \"http://localhost:3000\",\n  \"p_base_url\": \"https://vesyalmewlvmceevyias.supabase.co\"\n}",
+          "raw": "{\n  \"p_project_id\": \"{{project_id}}\",\n  \"p_email\": \"new.person@example.com\",\n  \"p_role\": \"member\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -1189,7 +1189,7 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/rest/v1/rpc/invite_member",
+          "raw": "{{base_url}}/rest/v1/rpc/create_project_invitation",
           "host": [
             "{{base_url}}"
           ],
@@ -1197,14 +1197,14 @@
             "rest",
             "v1",
             "rpc",
-            "invite_member"
+            "create_project_invitation"
           ]
         }
       },
       "response": []
     },
     {
-      "name": "Accept Invitation",
+      "name": "Accept Project Invitation",
       "request": {
         "auth": {
           "type": "noauth"
@@ -1226,7 +1226,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"p_token\": \"7f830826f5a286890c440c87110d06e876772f804afcdc9d9812cbfc5591c456\"\n}",
+          "raw": "{\n  \"p_token\": \"{{invitation_token}}\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -1234,7 +1234,7 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/rest/v1/rpc/accept_invitation",
+          "raw": "{{base_url}}/rest/v1/rpc/accept_project_invitation",
           "host": [
             "{{base_url}}"
           ],
@@ -1242,7 +1242,97 @@
             "rest",
             "v1",
             "rpc",
-            "accept_invitation"
+            "accept_project_invitation"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Tasks Calendar Stats",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"p_start_date\": \"2026-11-01\",\n  \"p_end_date\": \"2026-11-30\",\n  \"p_project_id\": null,\n  \"p_status\": null\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/rpc/get_tasks_calendar_stats",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "rpc",
+            "get_tasks_calendar_stats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Tasks Count Per Project",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{api_key}}"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"p_start_date\": \"2026-11-01\",\n  \"p_end_date\": \"2026-11-30\",\n  \"p_status\": null\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/rest/v1/rpc/get_tasks_count_per_project",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "rest",
+            "v1",
+            "rpc",
+            "get_tasks_count_per_project"
           ]
         }
       },
@@ -1280,6 +1370,14 @@
     },
     {
       "key": "api_key",
+      "value": ""
+    },
+    {
+      "key": "project_id",
+      "value": ""
+    },
+    {
+      "key": "invitation_token",
       "value": ""
     }
   ]
