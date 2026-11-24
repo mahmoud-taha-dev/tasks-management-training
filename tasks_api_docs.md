@@ -48,6 +48,8 @@
   - [Update Task](#21-update-task)
   - [Get Project Tasks](#22-get-project-tasks)
   - [Get Epic Tasks](#23-get-epic-tasks)
+  - [Get Tasks Calendar Stats](#24-get-tasks-calendar-stats)
+  - [Get Tasks Count Per Project](#25-get-tasks-count-per-project)
 
 ---
 
@@ -525,11 +527,11 @@ Returns all members belonging to a specific project.
 
 ---
 
-### 17. Invite New Member To Project
+### 17. Create Project Invitation
 
-Sends an email invitation to a user to join a project via a Supabase RPC function.
+Creates an invitation for an email address. The email does **not** need to belong to an existing Supabase Auth user. The RPC returns a one-time raw invitation token to the authorized inviter; only its SHA-256 hash is stored in the database.
 
-**`POST`** `/rest/v1/rpc/invite_member`
+**`POST`** `/rest/v1/rpc/create_project_invitation`
 
 #### Headers
 
@@ -543,51 +545,80 @@ Sends an email invitation to a user to join a project via a Supabase RPC functio
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `p_email` | string | ✅ Yes | Email of the user to invite |
-| `p_project_id` | UUID | ✅ Yes | Project ID to invite the user to |
-| `p_app_url` | string | ✅ Yes | Frontend URL used in the invitation link |
-| `p_base_url` | string | ✅ Yes | Supabase base URL for token generation |
+| `p_project_id` | UUID | Yes | Project to invite the person to |
+| `p_email` | string | Yes | Invitee email; an existing Auth account is not required |
+| `p_role` | string | No | `admin`, `member`, or `viewer`; defaults to `member` |
 
 #### Body Example
 
 ```json
 {
-    "p_email": "member@example.com",
-    "p_project_id": "ec9105d8-edea-4cc2-87dc-94e55d413d2d",
-    "p_app_url": "http://localhost:3000",
-    "p_base_url": "https://your-project.supabase.co"
+  "p_project_id": "{{project_id}}",
+  "p_email": "new.person@example.com",
+  "p_role": "member"
 }
 ```
+
+#### Response Example
+
+```json
+{
+  "invitation_id": "00000000-0000-0000-0000-000000000000",
+  "project_id": "00000000-0000-0000-0000-000000000000",
+  "email": "new.person@example.com",
+  "role": "member",
+  "status": "pending",
+  "expires_at": "2026-12-01T12:00:00Z",
+  "invitation_token": "<one-time-raw-token>"
+}
+```
+
+The caller must pass the returned token to the application's trusted email-delivery service and construct the invitation link. This SQL RPC does not send email itself. Do not log or persist the raw token in application logs; deliver it only to the invited email address.
+
+Only project owners and admins can create invitations. Only owners can invite someone as an admin. Existing project members and emails with an active pending invitation are rejected. Expired pending invitations are marked expired before a replacement is created.
 
 ---
 
-### 18. Accept Invitation
+### 18. Accept Project Invitation
 
-Accepts a project invitation using the token received via email.
+Accepts an invitation using the one-time token. The caller must be authenticated with a verified email address matching the invitation email (case-insensitive). For invitees without an account, sign up using the invited email, verify it, then accept the invitation.
 
-**`POST`** `/rest/v1/rpc/accept_invitation`
+**`POST`** `/rest/v1/rpc/accept_project_invitation`
 
 #### Headers
 
 | Header | Value | Description |
 |---|---|---|
 | `apikey` | `{{api_key}}` | Supabase public API key |
-| `Authorization` | `Bearer {{access_token}}` | JWT access token |
+| `Authorization` | `Bearer {{access_token}}` | JWT access token of the verified invitee |
 | `Content-Type` | `application/json` | Request body format |
 
 #### Request Body
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `p_token` | string | ✅ Yes | Invitation token received in the invitation email |
+| `p_token` | string | Yes | Raw invitation token received in the invitation link |
 
 #### Body Example
 
 ```json
 {
-    "p_token": "7f830826f5a286890c440c87110d06e876772f804afcdc9d9812cbfc5591c456"
+  "p_token": "{{invitation_token}}"
 }
 ```
+
+#### Response Example
+
+```json
+{
+  "project_id": "00000000-0000-0000-0000-000000000000",
+  "role": "member",
+  "status": "accepted"
+}
+```
+
+The token is single-use and expires seven days after creation. Acceptance fails for unauthenticated users, unverified emails, email mismatches, invalid/expired/revoked tokens, or users who are already project members.
+
 
 ---
 
@@ -748,3 +779,113 @@ Returns all tasks linked to a specific epic.
 | `epic_id` | `eq.{epic_id}` | Filter tasks by epic UUID |
 
 ---
+
+## Task Statistics
+
+---
+
+### 24. Get Tasks Calendar Stats
+
+Returns daily task counts grouped by status for the authenticated user (tasks assigned to the caller), plus totals and overdue metrics. Date boundaries use UTC. Every date in the requested range is returned, including dates with zero tasks.
+
+**`POST`** `/rest/v1/rpc/get_tasks_calendar_stats`
+
+#### Request Body
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `p_start_date` | date | Yes | Inclusive start date, `YYYY-MM-DD` |
+| `p_end_date` | date | Yes | Inclusive end date; maximum range is 367 calendar days |
+| `p_project_id` | UUID / null | No | Restrict results to one project |
+| `p_status` | task status / null | No | Restrict results to one status |
+
+#### Body Example
+
+```json
+{
+  "p_start_date": "2026-11-01",
+  "p_end_date": "2026-11-30",
+  "p_project_id": null,
+  "p_status": null
+}
+```
+
+#### Response Shape
+
+```json
+{
+  "daily": [
+    {
+      "date": "2026-11-01",
+      "TO_DO": 2,
+      "IN_PROGRESS": 1,
+      "BLOCKED": 0,
+      "IN_REVIEW": 0,
+      "READY_FOR_QA": 0,
+      "REOPENED": 0,
+      "READY_FOR_PRODUCTION": 0,
+      "DONE": 1
+    }
+  ],
+  "totals": {
+    "TO_DO": 2,
+    "IN_PROGRESS": 1,
+    "BLOCKED": 0,
+    "IN_REVIEW": 0,
+    "READY_FOR_QA": 0,
+    "REOPENED": 0,
+    "READY_FOR_PRODUCTION": 0,
+    "DONE": 1
+  },
+  "total_tasks": 4,
+  "done_tasks": 1,
+  "overdue_tasks": 2
+}
+```
+
+The optional status filter applies to daily counts, totals, and overdue counts. Overdue means a non-DONE task whose UTC due date is earlier than the current UTC date. Tasks without a due date are excluded.
+
+---
+
+### 25. Get Tasks Count Per Project
+
+Returns one item per project the authenticated user belongs to, with the count of tasks assigned to the caller and due within the requested UTC date range. Projects with no matching tasks are returned with `tasks_count: 0`.
+
+**`POST`** `/rest/v1/rpc/get_tasks_count_per_project`
+
+#### Request Body
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `p_start_date` | date | Yes | Inclusive start date, `YYYY-MM-DD` |
+| `p_end_date` | date | Yes | Inclusive end date; maximum range is 367 calendar days |
+| `p_status` | task status / null | No | Optional status filter |
+
+#### Body Example
+
+```json
+{
+  "p_start_date": "2026-11-01",
+  "p_end_date": "2026-11-30",
+  "p_status": null
+}
+```
+
+#### Response Example
+
+```json
+[
+  {
+    "project_id": "00000000-0000-0000-0000-000000000000",
+    "project_name": "Website Redesign",
+    "tasks_count": 12
+  },
+  {
+    "project_id": "11111111-1111-1111-1111-111111111111",
+    "project_name": "Mobile App",
+    "tasks_count": 0
+  }
+]
+```
+
+Both statistics RPCs require authentication. Invalid/missing dates, reversed ranges, and ranges exceeding 367 days are rejected.
