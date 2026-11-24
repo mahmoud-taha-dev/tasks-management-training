@@ -213,6 +213,30 @@ $;
 revoke all on function private.can_create_project_invitation(uuid, text) from public, anon;
 grant execute on function private.can_create_project_invitation(uuid, text) to authenticated;
 
+
+-- Free the one-pending-invitation slot when its previous invitation has expired.
+create or replace function private.expire_old_project_invitation()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $
+begin
+  update public.project_invitations
+    set status = 'expired'
+    where project_id = new.project_id
+      and lower(email) = lower(btrim(new.email))
+      and status = 'pending'
+      and expires_at <= now();
+  return new;
+end;
+$;
+
+revoke all on function private.expire_old_project_invitation() from public, anon, authenticated;
+create trigger project_invitations_expire_old_before_insert
+before insert on public.project_invitations
+for each row execute function private.expire_old_project_invitation();
+
 create or replace function private.next_project_number(
   p_project_id uuid,
   p_counter_table text
@@ -378,6 +402,7 @@ with check (
   and role in ('admin','member','viewer')
   and status = 'pending'
   and expires_at > now()
+  and (role <> 'admin' or private.has_project_role(project_id, array['owner']))
   and private.can_create_project_invitation(project_id, email)
 );
 -- Invitation state transitions are performed only by trusted database functions.
