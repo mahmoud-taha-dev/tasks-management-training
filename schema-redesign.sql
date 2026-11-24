@@ -64,7 +64,8 @@ create table public.epics (
   updated_at timestamptz not null default now(),
   deadline date,
   epic_number bigint not null,
-  constraint epics_project_number_key unique (project_id, epic_number)
+  constraint epics_project_number_key unique (project_id, epic_number),
+  constraint epics_project_id_id_key unique (project_id, id)
 );
 
 create table public.tasks (
@@ -81,6 +82,7 @@ create table public.tasks (
   status public.task_status not null default 'TO_DO',
   task_number bigint not null,
   constraint tasks_project_number_key unique (project_id, task_number),
+  constraint tasks_project_id_id_key unique (project_id, id),
   constraint tasks_epic_same_project_fkey
     foreign key (project_id, epic_id) references public.epics(project_id, id)
     on delete set null (epic_id)
@@ -95,11 +97,15 @@ create index project_members_user_project_idx on public.project_members (user_id
 create table public.comments (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,
-  task_id uuid references public.tasks(id) on delete cascade,
-  epic_id uuid references public.epics(id) on delete cascade,
+  task_id uuid,
+  epic_id uuid,
   author_id uuid not null default auth.uid() references auth.users(id) on delete restrict,
   content text not null check (length(btrim(content)) > 0),
   created_at timestamptz not null default now(),
+  constraint comments_task_same_project_fkey foreign key (project_id, task_id)
+    references public.tasks(project_id, id) on delete cascade,
+  constraint comments_epic_same_project_fkey foreign key (project_id, epic_id)
+    references public.epics(project_id, id) on delete cascade,
   constraint comments_exactly_one_parent check (
     (task_id is not null and epic_id is null) or
     (task_id is null and epic_id is not null)
@@ -109,12 +115,16 @@ create table public.comments (
 create table public.attachments (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,
-  task_id uuid references public.tasks(id) on delete cascade,
-  epic_id uuid references public.epics(id) on delete cascade,
+  task_id uuid,
+  epic_id uuid,
   uploaded_by uuid not null default auth.uid() references auth.users(id) on delete restrict,
   url text not null check (length(btrim(url)) > 0),
   file_name text,
   created_at timestamptz not null default now(),
+  constraint attachments_task_same_project_fkey foreign key (project_id, task_id)
+    references public.tasks(project_id, id) on delete cascade,
+  constraint attachments_epic_same_project_fkey foreign key (project_id, epic_id)
+    references public.epics(project_id, id) on delete cascade,
   constraint attachments_exactly_one_parent check (
     (task_id is not null and epic_id is null) or
     (task_id is null and epic_id is not null)
