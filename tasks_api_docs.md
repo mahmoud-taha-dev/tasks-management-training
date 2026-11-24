@@ -2,7 +2,7 @@
 
 > **Base URL:** `{{base_url}}`  
 > **Version:** v1  
-> **Date:** March 2026
+> **Date:** November 2026
 
 ---
 
@@ -11,7 +11,7 @@
 | Variable | Description |
 |---|---|
 | `{{base_url}}` | The Supabase project base URL |
-| `{{api_key}}` | The Supabase anon/public API key |
+| `{{api_key}}` | The Supabase Publishable key (or legacy anon public key) |
 | `{{access_token}}` | JWT access token — set automatically after Login |
 | `{{refresh_token}}` | Refresh token — set automatically after Login |
 | `{{user_id}}` | Authenticated user UUID — set automatically after Login |
@@ -59,7 +59,7 @@ In **Edge Functions → Secrets**, add the following keys using the credentials 
 | Name | Value |
 |---|---|
 | `SMTP_HOST` | SMTP server hostname |
-| `SMTP_PORT` | SMTP port (commonly `465` for implicit TLS) |
+| `SMTP_PORT` | SMTP port (use a supported port such as `465`; Supabase blocks outbound ports `25` and `587`) |
 | `SMTP_USER` | SMTP username |
 | `SMTP_PASSWORD` | SMTP password |
 | `SMTP_FROM` | Optional sender address; defaults to `SMTP_USER` |
