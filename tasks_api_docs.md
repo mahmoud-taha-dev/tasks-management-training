@@ -527,11 +527,11 @@ Returns all members belonging to a specific project.
 
 ---
 
-### 17. Create Project Invitation
+### 17. Send Project Invitation
 
-Creates an invitation for an email address. The email does **not** need to belong to an existing Supabase Auth user. The RPC returns a one-time raw invitation token to the authorized inviter; only its SHA-256 hash is stored in the database.
+Creates an invitation and sends the invitation email through the Supabase Edge Function. The invitee does **not** need to have an existing Supabase Auth account. The Edge Function generates the invitation link using the request's `Origin` header, so it works with localhost and preview URLs during development. The browser supplies this header automatically; when testing with Postman, set it manually (for example, `http://localhost:3000`).
 
-**`POST`** `/rest/v1/rpc/create_project_invitation`
+**`POST`** `/functions/v1/send-invite-email`
 
 #### Headers
 
@@ -545,17 +545,17 @@ Creates an invitation for an email address. The email does **not** need to belon
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `p_project_id` | UUID | Yes | Project to invite the person to |
-| `p_email` | string | Yes | Invitee email; an existing Auth account is not required |
-| `p_role` | string | No | `admin`, `member`, or `viewer`; defaults to `member` |
+| `project_id` | UUID | Yes | Project to invite the person to |
+| `email` | string | Yes | Invitee email; an existing Auth account is not required |
+| `role` | string | No | `admin`, `member`, or `viewer`; defaults to `member` |
 
 #### Body Example
 
 ```json
 {
-  "p_project_id": "{{project_id}}",
-  "p_email": "new.person@example.com",
-  "p_role": "member"
+  "project_id": "{{project_id}}",
+  "email": "new.person@example.com",
+  "role": "member"
 }
 ```
 
@@ -563,17 +563,21 @@ Creates an invitation for an email address. The email does **not** need to belon
 
 ```json
 {
-  "invitation_id": "00000000-0000-0000-0000-000000000000",
-  "project_id": "00000000-0000-0000-0000-000000000000",
-  "email": "new.person@example.com",
-  "role": "member",
-  "status": "pending",
-  "expires_at": "2026-12-01T12:00:00Z",
-  "invitation_token": "<one-time-raw-token>"
+  "success": true,
+  "invitation": {
+    "id": "00000000-0000-0000-0000-000000000000",
+    "project_id": "00000000-0000-0000-0000-000000000000",
+    "email": "new.person@example.com",
+    "role": "member",
+    "status": "pending",
+    "expires_at": "2026-12-01T12:00:00Z"
+  }
 }
 ```
 
-The caller must pass the returned token to the application's trusted email-delivery service and construct the invitation link. This SQL RPC does not send email itself. Do not log or persist the raw token in application logs; deliver it only to the invited email address.
+The Edge Function calls the internal `create_project_invitation` RPC using the caller's JWT, constructs `{Origin}/accept-invitation?token=...`, and sends the email. The raw token is never returned to the frontend. The function allows any valid HTTP or HTTPS origin during development and requires an `Origin` header. CORS is configured with `Access-Control-Allow-Origin: *` for development.
+
+Required Edge Function secrets: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, and `SMTP_PASSWORD`. Supabase provides `SUPABASE_URL` and the project's anon/publishable key to the function environment. If email delivery fails after invitation creation, the function calls the internal `revoke_project_invitation` RPC to revoke the undelivered invitation.
 
 Only project owners and admins can create invitations. Only owners can invite someone as an admin. Existing project members and emails with an active pending invitation are rejected. Expired pending invitations are marked expired before a replacement is created.
 
