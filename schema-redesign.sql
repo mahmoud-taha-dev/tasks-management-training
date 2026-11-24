@@ -291,6 +291,54 @@ exception
 end;
 $$;
 
+-- The raw invitation token must never be returned through the public Data API.
+-- Only the trusted Edge Function's service-role client can execute this RPC.
+revoke all on function public.create_project_invitation(uuid, text, text, uuid) from public, anon, authenticated;
+grant execute on function public.create_project_invitation(uuid, text, text, uuid) to service_role;
+
+-- Revoke an invitation when email delivery fails. The original inviter or a project
+-- owner/admin can revoke a pending invitation; clients cannot update invitation rows.
+create or replace function public.revoke_project_invitation(p_invitation_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := (select auth.uid());
+  v_invitation public.project_invitations%rowtype;
+begin
+  if v_user_id is null then
+    raise exception 'Authentication required' using errcode = '28000';
+  end if;
+
+  select invitation.*
+    into v_invitation
+    from public.project_invitations invitation
+   where invitation.id = p_invitation_id
+   for update;
+
+  if not found or v_invitation.status <> 'pending' then
+    raise exception 'Pending invitation not found' using errcode = 'P0002';
+  end if;
+
+  if v_invitation.invited_by <> v_user_id
+     and not private.has_project_role(v_invitation.project_id, array['owner','admin']) then
+    raise exception 'Not allowed to revoke this invitation' using errcode = '42501';
+  end if;
+
+  update public.project_invitations
+     set status = 'revoked'
+   where id = v_invitation.id;
+
+  return jsonb_build_object('invitation_id', v_invitation.id, 'status', 'revoked');
+end;
+$$;
+
+revoke all on function public.revoke_project_invitation(uuid) from public, anon;
+grant execute on function public.revoke_project_invitation(uuid) to authenticated;
+
+
 
 create or replace function private.next_project_number(
   p_project_id uuid,
