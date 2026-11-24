@@ -1,0 +1,2 @@
+[functions.send-invite-email]
+verify_jwt = true
