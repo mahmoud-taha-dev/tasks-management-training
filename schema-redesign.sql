@@ -666,6 +666,7 @@ as $
 declare
   v_user_id uuid := (select auth.uid());
   v_user_email text;
+  v_email_confirmed_at timestamptz;
   v_invitation public.project_invitations%rowtype;
 begin
   if v_user_id is null then
@@ -676,13 +677,13 @@ begin
     raise exception 'Invalid or expired invitation' using errcode = '22023';
   end if;
 
-  select lower(u.email)
-    into v_user_email
+  select lower(u.email), u.email_confirmed_at
+    into v_user_email, v_email_confirmed_at
     from auth.users u
     where u.id = v_user_id;
 
-  if v_user_email is null then
-    raise exception 'The authenticated account has no email address' using errcode = '28000';
+  if v_user_email is null or v_email_confirmed_at is null then
+    raise exception 'A verified email address is required to accept an invitation' using errcode = '28000';
   end if;
 
   select invitation.*
