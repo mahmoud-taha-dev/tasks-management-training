@@ -4,7 +4,8 @@
     "name": "Tasks Management",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "36418423",
-    "_collection_link": "https://go.postman.co/collection/36418423-06df42ab-77ad-4b9e-8bd8-59c2bc275a94?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/36418423-06df42ab-77ad-4b9e-8bd8-59c2bc275a94?source=collection_link",
+    "description": "Rafiq Mentorship — Tasks Management API.\n\nSTUDENT SETUP (Dashboard GUI only):\n1. Create your own Supabase project in the Dashboard.\n2. Open SQL Editor, paste the complete schema-redesign.sql from this repository, and run it in the new training project.\n3. Open Edge Functions → Deploy a new function → Via Editor. Create send-invite-email, paste the complete source from supabase/functions/send-invite-email/index.ts, then deploy.\n4. Open Edge Functions → Secrets and add SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, and optional SMTP_FROM from your email provider.\n5. Copy Project URL and Publishable key from Project Settings → API Keys (or Connect). Set base_url and api_key in your Postman environment.\n6. Set frontend_origin (for example http://localhost:3000). Sign up and log in; the collection saves the session tokens in the selected environment.\n\nNo Supabase CLI, terminal, Docker, local Supabase stack, or Supabase .env file is required. The frontend may have its own local environment file; do not put SMTP credentials in frontend configuration.\n\nInvitation requests call /functions/v1/send-invite-email. Postman must send Origin using frontend_origin. The function sends email using SMTP secrets saved in the Dashboard. Accept Project Invitation remains a PostgREST RPC."
   },
   "item": [
     {
@@ -1204,7 +1205,8 @@
           ]
         }
       },
-      "response": []
+      "response": [],
+      "description": "Sends an invitation email through the deployed Supabase Edge Function.\n\nBefore using this request, deploy send-invite-email from Dashboard → Edge Functions → Deploy a new function → Via Editor. Paste the complete source from supabase/functions/send-invite-email/index.ts. Add SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, and optional SMTP_FROM under Dashboard → Edge Functions → Secrets.\n\nThe caller must be signed in and authorized as a project owner/admin. The invitee does not need an existing Auth account. Only an owner can invite someone as admin.\n\nSet frontend_origin to the frontend URL (e.g. http://localhost:3000). Postman sends it as Origin; browsers send Origin automatically. The function accepts valid HTTP/HTTPS origins during development; restrict this before production.\n\nPOST {{base_url}}/functions/v1/send-invite-email\nBody: project_id, email, and optional role (admin/member/viewer; defaults to member). The raw invitation token is emailed and is never returned in the response."
     },
     {
       "name": "Accept Project Invitation",
@@ -1369,11 +1371,13 @@
   "variable": [
     {
       "key": "base_url",
-      "value": ""
+      "value": "",
+      "description": "Supabase Project URL, e.g. https://<project-ref>.supabase.co"
     },
     {
       "key": "api_key",
-      "value": ""
+      "value": "",
+      "description": "Supabase Publishable key or legacy anon public key."
     },
     {
       "key": "project_id",
@@ -1385,7 +1389,8 @@
     },
     {
       "key": "frontend_origin",
-      "value": "http://localhost:3000"
+      "value": "http://localhost:3000",
+      "description": "Frontend origin used to build invitation URLs, e.g. http://localhost:3000."
     }
   ]
 }
