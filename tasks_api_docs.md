@@ -501,7 +501,7 @@ Permanently deletes an epic by its ID.
 
 Returns a paginated list of epics for a given project.
 
-**`GET`** `/rest/v1/project_epics?project_id=eq.{project_id}`
+**`GET`** `/rest/v1/epics?project_id=eq.{project_id}&limit=20&offset=0`
 
 #### Headers
 
@@ -526,7 +526,7 @@ Returns a paginated list of epics for a given project.
 
 Returns the full details of a single epic within a project.
 
-**`GET`** `/rest/v1/project_epics?project_id=eq.{project_id}&id=eq.{epic_id}`
+**`GET`** `/rest/v1/epics?project_id=eq.{project_id}&id=eq.{epic_id}`
 
 #### Headers
 
