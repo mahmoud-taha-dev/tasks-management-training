@@ -505,7 +505,7 @@ language sql
 stable
 security invoker
 set search_path = ''
-as $
+as $$
   select
     p.id,
     p.name,
@@ -519,7 +519,7 @@ as $
     on pm.project_id = p.id
   where pm.user_id = (select auth.uid())
   order by p.updated_at desc, p.created_at desc;
-$;
+$$;
 
 -- RPC: calendar daily counts and summary metrics for the current assignee.
 create or replace function public.get_tasks_calendar_stats(
