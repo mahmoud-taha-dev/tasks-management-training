@@ -1057,14 +1057,14 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/rest/v1/project_tasks?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f",
+          "raw": "{{base_url}}/rest/v1/tasks?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "rest",
             "v1",
-            "project_tasks"
+            "tasks"
           ],
           "query": [
             {
@@ -1079,11 +1079,6 @@
             {
               "key": "title",
               "value": "ilike.%25login%25",
-              "disabled": true
-            },
-            {
-              "key": "task_id",
-              "value": "ilike.%253%25",
               "disabled": true
             },
             {
@@ -1105,7 +1100,8 @@
               "disabled": true
             }
           ]
-        }
+        },
+        "description": "Returns rows from public.tasks for the selected project. Supports filtering by status, title, task UUID, and pagination. RLS ensures the authenticated caller can only read tasks in projects they belong to."
       },
       "response": []
     },
@@ -1143,14 +1139,14 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/rest/v1/project_tasks?epic_id=eq.5360f7b4-5be0-4ca0-b0cc-31bff72434dd",
+          "raw": "{{base_url}}/rest/v1/tasks?epic_id=eq.5360f7b4-5be0-4ca0-b0cc-31bff72434dd",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "rest",
             "v1",
-            "project_tasks"
+            "tasks"
           ],
           "query": [
             {
@@ -1158,7 +1154,8 @@
               "value": "eq.5360f7b4-5be0-4ca0-b0cc-31bff72434dd"
             }
           ]
-        }
+        },
+        "description": "Returns rows from public.tasks linked to the selected epic. RLS ensures the authenticated caller can only read tasks in projects they belong to."
       },
       "response": []
     },
