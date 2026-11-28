@@ -19,7 +19,6 @@ This repository simulates a real-world frontend development environment. You wil
 - **Invitation Edge Function:** [send-invite-email](supabase/functions/send-invite-email/index.ts) — source code to deploy through the Supabase Dashboard.
 - **API and backend setup documentation:** [tasks_api_docs.md](tasks_api_docs.md) — Dashboard-only setup instructions, environment configuration, and API reference.
 - **Postman collection:** [Tasks Management.postman_collection.json](Tasks%20Management.postman_collection.json) — requests for exploring and testing the APIs.
-- **APIDog documentation:** [View API Docs](https://mr89tdrc7j.apidog.io/).
 
 ## Tools
 
