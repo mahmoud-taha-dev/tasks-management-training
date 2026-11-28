@@ -31,7 +31,7 @@ Every Rafiq student creates and configures their **own Supabase project**. These
 
 ### 2. Apply the database schema
 
-1. In this repository, open `schema-redesign.sql` and copy its complete contents.
+1. In this repository, open `schema.sql` and copy its complete contents.
 2. In the Supabase Dashboard, open **SQL Editor**.
 3. Create a new query, paste the SQL, and run it.
 4. Confirm that the query completes successfully before moving on.
