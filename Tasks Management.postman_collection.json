@@ -852,14 +852,14 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/rest/v1/get_project_members?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f",
+          "raw": "{{base_url}}/rest/v1/project_members?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "rest",
             "v1",
-            "get_project_members"
+            "project_members"
           ],
           "query": [
             {
@@ -867,7 +867,8 @@
               "value": "eq.298be621-59c7-4a62-ad2c-e640ff72135f"
             }
           ]
-        }
+        },
+        "description": "Returns membership rows from public.project_members for the selected project. Includes user_id and role. The authenticated caller must be a member of the project; RLS controls access."
       },
       "response": []
     },
