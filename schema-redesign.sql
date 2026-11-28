@@ -486,43 +486,6 @@ with check (private.has_project_role(project_id, array['owner','admin','member']
 create policy tasks_delete on public.tasks for delete to authenticated
 using (private.has_project_role(project_id, array['owner','admin']));
 
--- Comments and attachments: project members can read; contributors can create;
--- only contributors can edit; owner/admin can delete any.
-create policy comments_select on public.comments for select to authenticated
-using (private.has_project_role(project_id, array['owner','admin','member','viewer']));
-create policy comments_insert on public.comments for insert to authenticated
-with check (
-  author_id = (select auth.uid())
-  and private.has_project_role(project_id, array['owner','admin','member'])
-);
-create policy comments_update on public.comments for update to authenticated
-using (author_id = (select auth.uid()) and private.has_project_role(project_id, array['owner','admin','member']))
-with check (author_id = (select auth.uid()) and private.has_project_role(project_id, array['owner','admin','member']));
-create policy comments_delete on public.comments for delete to authenticated
-using (
-  private.has_project_role(project_id, array['owner','admin'])
-  or (author_id = (select auth.uid()) and private.has_project_role(project_id, array['member']))
-);
-
-create policy attachments_select on public.attachments for select to authenticated
-using (private.has_project_role(project_id, array['owner','admin','member','viewer']));
-create policy attachments_insert on public.attachments for insert to authenticated
-with check (
-  uploaded_by = (select auth.uid())
-  and private.has_project_role(project_id, array['owner','admin','member'])
-);
-create policy attachments_update on public.attachments for update to authenticated
-using (uploaded_by = (select auth.uid()) and private.has_project_role(project_id, array['owner','admin','member']))
-with check (uploaded_by = (select auth.uid()) and private.has_project_role(project_id, array['owner','admin','member']));
-create policy attachments_delete on public.attachments for delete to authenticated
-using (
-  private.has_project_role(project_id, array['owner','admin'])
-  or (uploaded_by = (select auth.uid()) and private.has_project_role(project_id, array['member']))
-);
-
--- Departments are reference data: authenticated users may read; writes are service-side only.
-create policy departments_select on public.departments for select to authenticated using (true);
-
 -- Counter tables are internal to trigger functions and not directly exposed.
 revoke all on public.project_task_counters, public.project_epic_counters from anon, authenticated;
 grant all on public.project_task_counters, public.project_epic_counters to postgres, service_role;
