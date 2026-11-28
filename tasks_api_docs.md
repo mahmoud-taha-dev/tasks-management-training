@@ -595,12 +595,15 @@ Updates one or more fields of an existing epic.
 
 Returns all members belonging to a specific project.
 
-**`GET`** `/rest/v1/get_project_members?project_id=eq.{project_id}`
+**`GET`** `/rest/v1/project_members?project_id=eq.{project_id}`
 
 #### Headers
 
 | Header | Value | Description |
-|---|---|---|
+|
+The endpoint reads from the `public.project_members` table. It returns membership records (including `user_id` and `role`); it does not return email or profile details because the redesigned schema does not expose a public `profiles` table.
+
+---|---|---|
 | `apikey` | `{{api_key}}` | Supabase public API key |
 | `Authorization` | `Bearer {{access_token}}` | JWT access token |
 | `Content-Type` | `application/json` | Request body format |
