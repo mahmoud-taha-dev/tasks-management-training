@@ -572,6 +572,37 @@ create policy departments_select on public.departments for select to authenticat
 revoke all on public.project_task_counters, public.project_epic_counters from anon, authenticated;
 grant all on public.project_task_counters, public.project_epic_counters to postgres, service_role;
 
+-- RPC: projects the authenticated user belongs to.
+create or replace function public.get_projects()
+returns table (
+  id uuid,
+  name text,
+  description text,
+  created_by uuid,
+  created_at timestamptz,
+  updated_at timestamptz,
+  role text
+)
+language sql
+stable
+security invoker
+set search_path = ''
+as $
+  select
+    p.id,
+    p.name,
+    p.description,
+    p.created_by,
+    p.created_at,
+    p.updated_at,
+    pm.role
+  from public.projects p
+  inner join public.project_members pm
+    on pm.project_id = p.id
+  where pm.user_id = (select auth.uid())
+  order by p.updated_at desc, p.created_at desc;
+$;
+
 -- RPC: calendar daily counts and summary metrics for the current assignee.
 create or replace function public.get_tasks_calendar_stats(
   p_start_date date,
@@ -823,6 +854,9 @@ revoke all on function public.get_tasks_calendar_stats(date, date, uuid, public.
 revoke all on function public.get_tasks_count_per_project(date, date, public.task_status) from public, anon;
 grant execute on function public.get_tasks_calendar_stats(date, date, uuid, public.task_status) to authenticated;
 grant execute on function public.get_tasks_count_per_project(date, date, public.task_status) to authenticated;
+
+revoke all on function public.get_projects() from public, anon;
+grant execute on function public.get_projects() to authenticated;
 
 -- The profiles table is intentionally absent. User identity remains in Supabase Auth.
 -- No anon access is granted to application data.
