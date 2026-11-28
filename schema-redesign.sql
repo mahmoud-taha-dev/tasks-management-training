@@ -94,48 +94,6 @@ create index tasks_project_epic_idx on public.tasks (project_id, epic_id);
 create index epics_project_idx on public.epics (project_id);
 create index project_members_user_project_idx on public.project_members (user_id, project_id);
 
-create table public.comments (
-  id uuid primary key default gen_random_uuid(),
-  project_id uuid not null references public.projects(id) on delete cascade,
-  task_id uuid,
-  epic_id uuid,
-  author_id uuid not null default auth.uid() references auth.users(id) on delete restrict,
-  content text not null check (length(btrim(content)) > 0),
-  created_at timestamptz not null default now(),
-  constraint comments_task_same_project_fkey foreign key (project_id, task_id)
-    references public.tasks(project_id, id) on delete cascade,
-  constraint comments_epic_same_project_fkey foreign key (project_id, epic_id)
-    references public.epics(project_id, id) on delete cascade,
-  constraint comments_exactly_one_parent check (
-    (task_id is not null and epic_id is null) or
-    (task_id is null and epic_id is not null)
-  )
-);
-
-create table public.attachments (
-  id uuid primary key default gen_random_uuid(),
-  project_id uuid not null references public.projects(id) on delete cascade,
-  task_id uuid,
-  epic_id uuid,
-  uploaded_by uuid not null default auth.uid() references auth.users(id) on delete restrict,
-  url text not null check (length(btrim(url)) > 0),
-  file_name text,
-  created_at timestamptz not null default now(),
-  constraint attachments_task_same_project_fkey foreign key (project_id, task_id)
-    references public.tasks(project_id, id) on delete cascade,
-  constraint attachments_epic_same_project_fkey foreign key (project_id, epic_id)
-    references public.epics(project_id, id) on delete cascade,
-  constraint attachments_exactly_one_parent check (
-    (task_id is not null and epic_id is null) or
-    (task_id is null and epic_id is not null)
-  )
-);
-
-create table public.departments (
-  id bigint generated always as identity primary key,
-  name text not null unique check (length(btrim(name)) > 0)
-);
-
 -- Keep per-project readable identifiers concurrency-safe without exposing counters.
 create table public.project_task_counters (
   project_id uuid primary key references public.projects(id) on delete cascade,
@@ -464,9 +422,6 @@ alter table public.project_members enable row level security;
 alter table public.project_invitations enable row level security;
 alter table public.epics enable row level security;
 alter table public.tasks enable row level security;
-alter table public.comments enable row level security;
-alter table public.attachments enable row level security;
-alter table public.departments enable row level security;
 alter table public.project_task_counters enable row level security;
 alter table public.project_epic_counters enable row level security;
 
@@ -864,9 +819,8 @@ revoke all on all tables in schema public from anon;
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on
   public.projects, public.project_members,
-  public.epics, public.tasks, public.comments, public.attachments
+  public.epics, public.tasks
 to authenticated;
 grant select, delete on public.project_invitations to authenticated;
-grant select on public.departments to authenticated;
 
 commit;
