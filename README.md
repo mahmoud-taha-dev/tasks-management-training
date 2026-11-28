@@ -1,28 +1,33 @@
 ![Cover](Cover.png)
 
-# Tasks Management Frontend Training Project
+# Tasks Management — Frontend Training Project
 
-Welcome to the **Tasks Management** project! This repository is specifically designed for frontend developers for training purposes. 
+Welcome to the **Tasks Management** training project by Rafiq.
 
-This project will help you improve your skills by simulating a real-world project environment. Just like on actual projects, you are provided with a complete set of resources including a Figma design file, a board with tasks for each feature, and comprehensive API documentation.
+This repository simulates a real-world frontend development environment. You will work from a provided product design and task board, integrate with a real Supabase backend, and use API documentation and Postman to explore and test the available endpoints.
 
-## 🚀 Project Resources
+## Getting Started
 
-- **Figma Design:** [View Design](https://www.figma.com/design/zAwYa5nDWE2YirHYPpNabw/Tasks-Management?node-id=0-1&t=L7Jf026Stu5qCTd2-1)
-- **Task Board:** [List of tasks to do](https://www.notion.so/ee8ac15769ca83b790a281e6aca5682a?v=fb4ac15769ca8211827708b963b3b7fc)
-- **Backend Schema:** [View the Supabase schema](schema.sql) (fresh-project setup; see the API documentation before applying it).
-- **Invitation Edge Function:** [View send-invite-email](supabase/functions/send-invite-email/index.ts).
-- **Backend Setup:** Follow the [API documentation](tasks_api_docs.md) for the Dashboard-only Supabase setup.
-- **API Documentation:** [View API Docs](tasks_api_docs.md)
-- **APIDog Documentation:** [View APIDog Docs](https://mr89tdrc7j.apidog.io/)
+1. **Explore the product design:** Review the [Figma design](https://www.figma.com/design/zAwYa5nDWE2YirHYPpNabw/Tasks-Management?node-id=0-1&t=L7Jf026Stu5qCTd2-1).
+2. **Review the work:** Open the [Task Board](https://www.notion.so/ee8ac15769ca83b790a281e6aca5682a?v=fb4ac15769ca8211827708b963b3b7fc) to understand the features and assigned tasks.
+3. **Set up your backend:** Follow the [Supabase setup guide and API documentation](tasks_api_docs.md). Each student should create and configure their own Supabase project using the Dashboard.
+4. **Explore and test the APIs:** Import the [Postman collection](Tasks%20Management.postman_collection.json) and configure it using the instructions in the API documentation.
 
-## 🛠️ Tools Included
+## Repository Resources
 
-- **Postman Collection:** You can find the Postman collection directly in this repository to easily test and explore the available APIs.
+- **Database schema:** [schema.sql](schema.sql) — full fresh-project schema for Supabase. Apply it only to a new training project; it is not a data-preserving migration.
+- **Invitation Edge Function:** [send-invite-email](supabase/functions/send-invite-email/index.ts) — source code to deploy through the Supabase Dashboard.
+- **API and backend setup documentation:** [tasks_api_docs.md](tasks_api_docs.md) — Dashboard-only setup instructions, environment configuration, and API reference.
+- **Postman collection:** [Tasks Management.postman_collection.json](Tasks%20Management.postman_collection.json) — requests for exploring and testing the APIs.
+- **APIDog documentation:** [View API Docs](https://mr89tdrc7j.apidog.io/).
 
-## 📬 Contact
+## Tools
 
-If you have any questions or need further assistance, feel free to reach out:
+You will need a frontend development environment, a Supabase account, and Postman. The backend setup guide explains how to configure Supabase through its Dashboard; **Supabase CLI, Docker, and a local Supabase stack are not required**.
+
+## Contact
+
+If you have questions or need assistance, feel free to reach out:
 
 - **Email:** [mahmoud.taha.dev@gmail.com](mailto:mahmoud.taha.dev@gmail.com)
 - **LinkedIn:** [Mahmoud Taha](https://www.linkedin.com/in/mahmoud-taha-dev/)
