@@ -537,7 +537,8 @@
             "rpc",
             "get_projects"
           ]
-        }
+        },
+        "description": "Returns only projects where the signed-in user has a project_members row. The user ID is derived from the JWT (auth.uid()); do not pass user_id. GET /rest/v1/rpc/get_projects takes no parameters and returns project fields plus the caller's role."
       },
       "response": []
     },
