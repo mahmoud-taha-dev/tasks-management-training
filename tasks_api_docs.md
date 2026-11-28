@@ -400,7 +400,7 @@ Updates an existing project's name and/or description by project ID.
 
 ### 10. Get Projects
 
-Returns all projects accessible to the authenticated user via a stored RPC function.
+Returns the projects where the authenticated user has a membership record (Owner, Admin, Member, or Viewer). The function derives the user ID from the access token using `auth.uid()`; the client must not send a `user_id`. Results are ordered by most recently updated project first.
 
 **`GET`** `/rest/v1/rpc/get_projects`
 
@@ -410,7 +410,26 @@ Returns all projects accessible to the authenticated user via a stored RPC funct
 |---|---|---|
 | `apikey` | `{{api_key}}` | Supabase public API key |
 | `Authorization` | `Bearer {{access_token}}` | JWT access token |
-| `Content-Type` | `application/json` | Request body format |
+
+No query parameters or request body are required.
+
+#### Response Example
+
+```json
+[
+  {
+    "id": "298be621-59c7-4a62-ad2c-e640ff72135f",
+    "name": "Taskly",
+    "description": "Task management training project",
+    "created_by": "d62a3f5e-92f8-4b1e-a8df-1bbbc3b2e9aa",
+    "created_at": "2026-11-28T08:00:00+00:00",
+    "updated_at": "2026-11-28T09:00:00+00:00",
+    "role": "owner"
+  }
+]
+```
+
+The `role` field is the authenticated user's membership role in that project. An authenticated user with no project memberships receives an empty array. Unauthenticated requests are not granted function execution.
 
 ---
 
