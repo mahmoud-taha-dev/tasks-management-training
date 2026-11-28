@@ -676,14 +676,14 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/rest/v1/project_epics?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f&limit=2&offset=4",
+          "raw": "{{base_url}}/rest/v1/epics?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f&limit=2&offset=0",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "rest",
             "v1",
-            "project_epics"
+            "epics"
           ],
           "query": [
             {
@@ -697,11 +697,12 @@
             },
             {
               "key": "offset",
-              "value": "4",
+              "value": "0",
               "type": "text"
             }
           ]
-        }
+        },
+        "description": "Returns a paginated list of epics from the public.epics table, filtered by project_id. Uses PostgREST limit/offset pagination. Replace the sample project UUID with the selected project ID."
       },
       "response": []
     },
@@ -739,14 +740,14 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/rest/v1/project_epics?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f&id=eq.5360f7b4-5be0-4ca0-b0cc-31bff72434dd",
+          "raw": "{{base_url}}/rest/v1/epics?project_id=eq.298be621-59c7-4a62-ad2c-e640ff72135f&id=eq.5360f7b4-5be0-4ca0-b0cc-31bff72434dd",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "rest",
             "v1",
-            "project_epics"
+            "epics"
           ],
           "query": [
             {
