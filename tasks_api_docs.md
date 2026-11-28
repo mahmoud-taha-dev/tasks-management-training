@@ -840,7 +840,7 @@ Updates one or more fields of a task (e.g. status change).
 
 Returns tasks for a project. Supports filtering by status, title search, task ID, and pagination.
 
-**`GET`** `/rest/v1/project_tasks?project_id=eq.{project_id}`
+**`GET`** `/rest/v1/tasks?project_id=eq.{project_id}`
 
 #### Headers
 
@@ -868,7 +868,7 @@ Returns tasks for a project. Supports filtering by status, title search, task ID
 
 Returns all tasks linked to a specific epic.
 
-**`GET`** `/rest/v1/project_tasks?epic_id=eq.{epic_id}`
+**`GET`** `/rest/v1/tasks?epic_id=eq.{epic_id}`
 
 #### Headers
 
